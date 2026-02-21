@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASMR Studio - 零门槛生成沉浸式ASMR视频</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 自定义Tailwind配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ash: {
+                            950: '#000000', // 纯黑（最深背景）
+                            900: '#0A0A0A', // 哑光黑（主背景）
+                            800: '#181818', // 深灰（卡片背景）
+                            700: '#242424', // 中灰（次要背景/悬停）
+                            600: '#333333', // 浅灰（边框/输入框）
+                            500: '#4A4A4A', // 亮灰（文本/交互）
+                            400: '#666666', // 高光灰（强调/选中）
+                        }
+                    },
+                    fontFamily: {
+                        film: ['Montserrat', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'ash-glow': '0 0 25px rgba(255, 255, 255, 0.05)',
+                        'ash-hover': '0 8px 35px rgba(0, 0, 0, 0.4)',
+                    },
+                    aspectRatio: {
+                        'film': '16/9', // 电影画幅比例
+                    }
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            /* 隐藏滚动条 */
+            .no-scrollbar {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .no-scrollbar::-webkit-scrollbar {
+                display: none;
+            }
+            /* 黑灰渐变（起始页专属） */
+            .start-gradient {
+                background: radial-gradient(circle at center, rgba(24,24,24,0.7) 0%, rgba(10,10,10,1) 70%, rgba(0,0,0,1) 100%);
+            }
+            /* 黑灰渐变遮罩（电影级） */
+            .ash-gradient {
+                background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,1) 100%);
+            }
+            /* 黑灰渐变背景（交互元素） */
+            .ash-btn-gradient {
+                background: linear-gradient(to right, #181818, #242424);
+            }
+            /* 播放控制渐变 */
+            .control-gradient {
+                background: linear-gradient(to top, rgba(0,0,0,1), rgba(0,0,0,0));
+            }
+            /* 3D空间动效 */
+            .card-3d {
+                transform: perspective(1200px) translateY(0px);
+                transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+            .card-3d:hover {
+                transform: perspective(1200px) translateY(-6px);
+                box-shadow: var(--tw-shadow-ash-hover);
+            }
+            /* 音频波形模拟（黑灰版） */
+            .waveform {
+                display: flex;
+                align-items: center;
+                gap: 1px;
+                height: 20px;
+            }
+            .waveform-bar {
+                width: 2px;
+                background: linear-gradient(to top, #333333, #666666);
+                border-radius: 1px;
+                animation: wave 1.5s infinite ease-in-out;
+            }
+            @keyframes wave {
+                0%, 100% { height: 5px; }
+                50% { height: 20px; }
+            }
+            /* ASMR波形呼吸动效（起始页） */
+            .asmr-wave {
+                display: flex;
+                align-items: center;
+                gap: 2px;
+                height: 30px;
+                width: 100%;
+                justify-content: center;
+            }
+            .wave-bar {
+                width: 2px;
+                background: linear-gradient(to top, #333333, #666666);
+                border-radius: 1px;
+                animation: breath 2.5s infinite ease-in-out;
+            }
+            @keyframes breath {
+                0%, 100% { height: 8px; }
+                50% { height: 30px; }
+            }
+            /* 进度条渐变 */
+            .progress-gradient {
+                background: linear-gradient(to right, #4A4A4A, #666666);
+            }
+        }
+    </style>
+    <!-- 引入Montserrat字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-ash-950 text-gray-200 font-film no-scrollbar">
+    <!-- 主容器：横向排列所有页面 -->
+    <div class="flex gap-8 p-10 h-screen items-start overflow-x-auto no-scrollbar">
+        <!-- 1. 起始页 -->
+        <div class="w-[480px] h-[850px] bg-ash-900 rounded-3xl p-8 overflow-hidden no-scrollbar relative card-3d shrink-0 start-gradient flex flex-col items-center justify-center">
+            <!-- 品牌Logo -->
+            <div class="mb-8 card-3d">
+                <div class="w-20 h-20 rounded-full bg-ash-800 flex items-center justify-center ash-btn-gradient shadow-ash-glow">
+                    <span class="text-ash-400 font-bold text-2xl">AS</span>
+                </div>
+            </div>
+
+            <!-- 主标题 -->
+            <h1 class="text-4xl font-extrabold tracking-wider text-center mb-4">ASMR Studio</h1>
+
+            <!-- 核心卖点 -->
+            <p class="text-ash-400 text-lg text-center mb-2">零门槛创作沉浸式ASMR视频</p>
+            <p class="text-ash-500 text-sm text-center max-w-xs mb-8">
+                上传生活瞬间，AI生成超长循环的助眠/学习白噪音
+            </p>
+
+            <!-- ASMR波形动效 -->
+            <div class="asmr-wave mb-10">
+                <div class="wave-bar" style="animation-delay: 0s;"></div>
+                <div class="wave-bar" style="animation-delay: 0.2s;"></div>
+                <div class="wave-bar" style="animation-delay: 0.4s;"></div>
+                <div class="wave-bar" style="animation-delay: 0.6s;"></div>
+                <div class="wave-bar" style="animation-delay: 0.8s;"></div>
+                <div class="wave-bar" style="animation-delay: 1.0s;"></div>
+                <div class="wave-bar" style="animation-delay: 1.2s;"></div>
+                <div class="wave-bar" style="animation-delay: 1.0s;"></div>
+                <div class="wave-bar" style="animation-delay: 0.8s;"></div>
+                <div class="wave-bar" style="animation-delay: 0.6s;"></div>
+                <div class="wave-bar" style="animation-delay: 0.4s;"></div>
+                <div class="wave-bar" style="animation-delay: 0.2s;"></div>
+                <div class="wave-bar" style="animation-delay: 0s;"></div>
+            </div>
+
+            <!-- 操作按钮区 -->
+            <div class="flex flex-col gap-4 w-full max-w-xs">
+                <button class="ash-btn-gradient text-ash-400 py-4 rounded-xl hover:bg-ash-700 transition-all text-lg font-medium card-3d shadow-ash-glow">
+                    登录
+                </button>
+                <button class="bg-ash-800 hover:bg-ash-700 py-4 rounded-xl transition-all text-lg font-medium card-3d">
+                    注册
+                </button>
+                <button class="text-ash-500 hover:text-ash-400 transition-colors text-sm py-2 flex items-center justify-center gap-2">
+                    <span>👤</span>
+                    <span>以游客身份体验</span>
+                </button>
+            </div>
+
+            <!-- 底部信息 -->
+            <div class="absolute bottom-6 text-ash-600 text-xs text-center">
+                <p>© 2025 ASMR Studio · 沉浸式创作平台</p>
+            </div>
+        </div>
+
+        <!-- 2. 首页 -->
+        <div class="w-[480px] h-[850px] bg-ash-900 rounded-3xl p-8 overflow-hidden no-scrollbar relative card-3d shrink-0">
+            <!-- 顶部导航 -->
+            <header class="flex justify-between items-center mb-8">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-ash-800 flex items-center justify-center ash-btn-gradient">
+                        <span class="text-ash-400 font-bold">AS</span>
+                    </div>
+                    <h1 class="text-xl font-bold tracking-wider">ASMR Studio</h1>
+                </div>
+                <nav class="flex gap-5 items-center">
+                    <button class="text-ash-500 hover:text-white transition-colors text-sm">探索</button>
+                    <button class="ash-btn-gradient text-ash-400 px-5 py-2 rounded-xl hover:bg-ash-700 transition-all text-sm font-medium">
+                        创作
+                    </button>
+                    <div class="w-9 h-9 rounded-full bg-ash-700 flex items-center justify-center text-xs ash-btn-gradient">
+                        <span>MY</span>
+                    </div>
+                </nav>
+            </header>
+
+            <!-- 电影感横幅（黑灰渐变） -->
+            <div class="relative aspect-film rounded-2xl overflow-hidden mb-8 card-3d">
+                <img src="https://images.unsplash.com/photo-1516281710471-191b24611793?q=80&w=800&auto=format&fit=crop" 
+                     alt="沉浸式森林雨声" class="w-full h-full object-cover opacity-50 brightness-75">
+                <div class="absolute inset-0 ash-gradient flex flex-col justify-end p-6">
+                    <span class="text-ash-400 text-xs uppercase tracking-wider mb-2">沉浸式体验</span>
+                    <h2 class="text-2xl font-semibold mb-2">森林雨声 · 深度助眠</h2>
+                    <p class="text-ash-500 text-sm max-w-md">由用户录制的林间雨声，AI延展为10小时无缝循环，3D环绕音效</p>
+                </div>
+            </div>
+
+            <!-- 分类标签（黑灰层级） -->
+            <div class="flex gap-2 mb-8 overflow-x-auto no-scrollbar pb-2">
+                <button class="bg-ash-700 text-ash-400 px-4 py-2 rounded-lg whitespace-nowrap text-sm ash-btn-gradient">助眠</button>
+                <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg whitespace-nowrap text-sm transition-colors">专注学习</button>
+                <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg whitespace-nowrap text-sm transition-colors">白噪音</button>
+                <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg whitespace-nowrap text-sm transition-colors">人声陪伴</button>
+                <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg whitespace-nowrap text-sm transition-colors">3D空间</button>
+                <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg whitespace-nowrap text-sm transition-colors">定时</button>
+            </div>
+
+            <!-- 热门作品（黑灰卡片） -->
+            <div class="space-y-5">
+                <h3 class="text-lg font-medium mb-4 flex items-center gap-2">
+                    <span>热门创作</span>
+                    <span class="w-1 h-5 bg-ash-600 rounded-full"></span>
+                </h3>
+                
+                <!-- 作品卡片1 -->
+                <div class="bg-ash-800 rounded-xl p-4 card-3d">
+                    <div class="flex gap-4">
+                        <div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1489533119213-66a5cd877091?q=80&w=400&auto=format&fit=crop" 
+                                 alt="咖啡馆白噪音" class="w-full h-full object-cover brightness-75">
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-medium text-lg">午后咖啡馆</h4>
+                            <p class="text-ash-500 text-xs mt-1">时长：6小时 | 3D空间音效 | 专注学习</p>
+                            <!-- 音频波形模拟（黑灰版） -->
+                            <div class="waveform mt-3">
+                                <div class="waveform-bar" style="animation-delay: 0s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.1s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.2s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.3s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.4s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.5s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.4s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.3s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.2s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.1s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0s;"></div>
+                                <div class="waveform-bar opacity-0"></div>
+                                <div class="waveform-bar" style="animation-delay: 0s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.1s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.2s;"></div>
+                            </div>
+                            <div class="flex gap-3 mt-3">
+                                <button class="text-xs bg-ash-700 text-ash-400 px-3 py-1.5 rounded-lg ash-btn-gradient">播放</button>
+                                <button class="text-xs bg-ash-800 px-3 py-1.5 rounded-lg">收藏</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 作品卡片2 -->
+                <div class="bg-ash-800 rounded-xl p-4 card-3d">
+                    <div class="flex gap-4">
+                        <div class="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1501630834273-4b5604d2ee31?q=80&w=400&auto=format&fit=crop" 
+                                 alt="海浪声ASMR" class="w-full h-full object-cover brightness-75">
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-medium text-lg">深夜海岸</h4>
+                            <p class="text-ash-500 text-xs mt-1">时长：8小时 | 3D环绕 | 深度助眠</p>
+                            <!-- 音频波形模拟（黑灰版） -->
+                            <div class="waveform mt-3">
+                                <div class="waveform-bar" style="animation-delay: 0s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.1s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.2s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.3s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.4s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.5s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.4s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.3s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.2s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.1s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0s;"></div>
+                                <div class="waveform-bar opacity-0"></div>
+                                <div class="waveform-bar" style="animation-delay: 0s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.1s;"></div>
+                                <div class="waveform-bar" style="animation-delay: 0.2s;"></div>
+                            </div>
+                            <div class="flex gap-3 mt-3">
+                                <button class="text-xs bg-ash-700 text-ash-400 px-3 py-1.5 rounded-lg ash-btn-gradient">播放</button>
+                                <button class="text-xs bg-ash-800 px-3 py-1.5 rounded-lg">收藏</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 创作中心 -->
+        <div class="w-[480px] h-[850px] bg-ash-900 rounded-3xl p-8 overflow-hidden no-scrollbar relative card-3d shrink-0">
+            <!-- 顶部导航 -->
+            <header class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold tracking-wide">创作工坊</h2>
+                <div class="flex gap-3">
+                    <button class="text-ash-500 hover:text-white transition-colors text-sm">保存草稿</button>
+                    <button class="text-ash-500 hover:text-white transition-colors text-sm">帮助</button>
+                </div>
+            </header>
+
+            <!-- 素材上传区（黑灰渐变卡片） -->
+            <div class="bg-ash-800 rounded-2xl p-6 mb-8 card-3d">
+                <h3 class="font-medium mb-5 flex items-center gap-2">
+                    <span class="text-lg">上传素材</span>
+                    <span class="text-ash-500 text-xs">记录生活瞬间</span>
+                </h3>
+                <div class="grid grid-cols-2 gap-6">
+                    <!-- 音频上传 -->
+                    <div class="border-2 border-dashed border-ash-600 rounded-xl p-6 text-center hover:border-ash-500 transition-colors">
+                        <div class="text-ash-400 text-3xl mb-3">🎙️</div>
+                        <p class="text-sm mb-4 text-ash-500">上传音频/环境音</p>
+                        <label class="text-xs bg-ash-700 text-ash-400 px-4 py-2 rounded-lg cursor-pointer hover:bg-ash-600 transition-colors ash-btn-gradient">
+                            选择音频文件
+                            <input type="file" accept="audio/*" class="hidden">
+                        </label>
+                    </div>
+                    <!-- 视觉素材上传 -->
+                    <div class="border-2 border-dashed border-ash-600 rounded-xl p-6 text-center hover:border-ash-500 transition-colors">
+                        <div class="text-ash-400 text-3xl mb-3">🖼️</div>
+                        <p class="text-sm mb-4 text-ash-500">上传图片/短视频</p>
+                        <label class="text-xs bg-ash-700 text-ash-400 px-4 py-2 rounded-lg cursor-pointer hover:bg-ash-600 transition-colors ash-btn-gradient">
+                            选择视觉文件
+                            <input type="file" accept="image/*,video/*" class="hidden">
+                        </label>
+                    </div>
+                </div>
+                <!-- 已上传素材 -->
+                <div class="mt-6 bg-ash-700 rounded-xl p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-2">
+                            <div class="text-ash-400">🎵</div>
+                            <p class="text-sm">海边雨声.mp3</p>
+                        </div>
+                        <button class="text-xs text-ash-500 hover:text-ash-400 transition-colors">删除</button>
+                    </div>
+                    <!-- 进度条 + 渐变 -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-full h-2 bg-ash-800 rounded-full overflow-hidden">
+                            <div class="h-full progress-gradient w-[82%] rounded-full"></div>
+                        </div>
+                        <span class="text-xs text-ash-500">82%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI设置区（黑灰层级） -->
+            <div class="bg-ash-800 rounded-2xl p-6 mb-8 card-3d">
+                <h3 class="font-medium mb-5 flex items-center gap-2">
+                    <span class="text-lg">AI生成设置</span>
+                    <span class="text-ash-500 text-xs">定制你的沉浸式体验</span>
+                </h3>
+                
+                <!-- 音频设置 -->
+                <div class="mb-6 pb-6 border-b border-ash-700">
+                    <label class="text-sm block mb-3 text-ash-500">音频延展时长</label>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs text-ash-500">1小时</span>
+                        <input type="range" min="1" max="12" value="10" class="w-full mx-3 accent-ash-400">
+                        <span class="text-xs text-ash-500">12小时</span>
+                        <span class="text-sm font-medium bg-ash-700 px-3 py-1 rounded-lg ash-btn-gradient">10小时</span>
+                    </div>
+                    <div class="flex flex-wrap gap-3 mt-2">
+                        <label class="flex items-center gap-2 text-xs bg-ash-700 px-4 py-2 rounded-lg cursor-pointer ash-btn-gradient">
+                            <input type="checkbox" checked class="accent-ash-400">
+                            循环自然过渡
+                        </label>
+                        <label class="flex items-center gap-2 text-xs bg-ash-700 px-4 py-2 rounded-lg cursor-pointer ash-btn-gradient">
+                            <input type="checkbox" class="accent-ash-400">
+                            3D空间音效
+                        </label>
+                        <label class="flex items-center gap-2 text-xs bg-ash-700 px-4 py-2 rounded-lg cursor-pointer ash-btn-gradient">
+                            <input type="checkbox" class="accent-ash-400">
+                            降噪优化
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 视觉设置 -->
+                <div>
+                    <label class="text-sm block mb-3 text-ash-500">视觉延展时长</label>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-xs text-ash-500">1小时</span>
+                        <input type="range" min="1" max="12" value="10" class="w-full mx-3 accent-ash-400">
+                        <span class="text-xs text-ash-500">12小时</span>
+                        <span class="text-sm font-medium bg-ash-700 px-3 py-1 rounded-lg ash-btn-gradient">10小时</span>
+                    </div>
+                    <div class="flex flex-wrap gap-3 mt-2">
+                        <label class="flex items-center gap-2 text-xs bg-ash-700 px-4 py-2 rounded-lg cursor-pointer ash-btn-gradient">
+                            <input type="checkbox" checked class="accent-ash-400">
+                            4K高清增强
+                        </label>
+                        <label class="flex items-center gap-2 text-xs bg-ash-700 px-4 py-2 rounded-lg cursor-pointer ash-btn-gradient">
+                            <input type="checkbox" class="accent-ash-400">
+                            3D视觉效果
+                        </label>
+                        <label class="flex items-center gap-2 text-xs bg-ash-700 px-4 py-2 rounded-lg cursor-pointer ash-btn-gradient">
+                            <input type="checkbox" class="accent-ash-400">
+                            投影适配
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 预览区（黑灰渐变） -->
+            <div class="bg-ash-800 rounded-2xl p-6 mb-8 card-3d">
+                <h3 class="font-medium mb-5">生成预览</h3>
+                <div class="relative aspect-film rounded-xl overflow-hidden bg-ash-700 flex items-center justify-center">
+                    <img src="https://images.unsplash.com/photo-1501630834273-4b5604d2ee31?q=80&w=800&auto=format&fit=crop" 
+                         alt="预览图" class="w-full h-full object-cover opacity-25 brightness-50">
+                    <button class="w-16 h-16 rounded-full bg-ash-700 flex items-center justify-center text-white card-3d ash-btn-gradient">
+                        ▶️
+                    </button>
+                </div>
+            </div>
+
+            <!-- 生成按钮（黑灰渐变+微光） -->
+            <button class="w-full text-white py-4 rounded-2xl font-medium hover:bg-ash-600 transition-colors shadow-ash-glow text-lg ash-btn-gradient">
+                生成沉浸式ASMR视频
+            </button>
+        </div>
+
+        <!-- 4. 作品库 -->
+        <div class="w-[480px] h-[850px] bg-ash-900 rounded-3xl p-8 overflow-hidden no-scrollbar relative card-3d shrink-0">
+            <!-- 顶部导航 -->
+            <header class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold tracking-wide">我的作品库</h2>
+                <div class="flex gap-3">
+                    <button class="text-ash-500 hover:text-white transition-colors text-sm">筛选</button>
+                    <button class="text-ash-500 hover:text-white transition-colors text-sm">导出</button>
+                </div>
+            </header>
+
+            <!-- 作品库分类 -->
+            <div class="flex gap-2 mb-8 overflow-x-auto no-scrollbar pb-2">
+                <button class="bg-ash-700 text-ash-400 px-4 py-2 rounded-lg whitespace-nowrap text-sm ash-btn-gradient">全部作品</button>
+                <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg whitespace-nowrap text-sm transition-colors">草稿</button>
+                <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg whitespace-nowrap text-sm transition-colors">已发布</button>
+                <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg whitespace-nowrap text-sm transition-colors">收藏</button>
+            </div>
+
+            <!-- 作品列表 -->
+            <div class="space-y-4 h-[600px] overflow-y-auto no-scrollbar pr-2">
+                <!-- 作品项1 -->
+                <div class="bg-ash-800 rounded-xl p-4 card-3d">
+                    <div class="flex gap-4">
+                        <div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 relative">
+                            <img src="https://images.unsplash.com/photo-1516281710471-191b24611793?q=80&w=400&auto=format&fit=crop" 
+                                 alt="森林雨声" class="w-full h-full object-cover brightness-75">
+                            <div class="absolute top-1 right-1 bg-ash-900/80 text-xs px-2 py-1 rounded">10小时</div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between">
+                                <h4 class="font-medium">森林雨声 · 助眠</h4>
+                                <div class="text-ash-500 text-xs">2024-05-18</div>
+                            </div>
+                            <p class="text-ash-500 text-xs mt-1">3D环绕 | 循环过渡 | 4K高清</p>
+                            <div class="flex gap-2 mt-3">
+                                <button class="text-xs bg-ash-700 text-ash-400 px-3 py-1 rounded-lg ash-btn-gradient">播放</button>
+                                <button class="text-xs bg-ash-800 px-3 py-1 rounded-lg hover:bg-ash-700 transition-colors">编辑</button>
+                                <button class="text-xs bg-ash-800 px-3 py-1 rounded-lg hover:bg-ash-700 transition-colors">分享</button>
+                                <button class="text-xs text-ash-500 px-3 py-1 rounded-lg hover:text-ash-400 transition-colors">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 作品项2 -->
+                <div class="bg-ash-800 rounded-xl p-4 card-3d">
+                    <div class="flex gap-4">
+                        <div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 relative">
+                            <img src="https://images.unsplash.com/photo-1489533119213-66a5cd877091?q=80&w=400&auto=format&fit=crop" 
+                                 alt="咖啡馆白噪音" class="w-full h-full object-cover brightness-75">
+                            <div class="absolute top-1 right-1 bg-ash-900/80 text-xs px-2 py-1 rounded">6小时</div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between">
+                                <h4 class="font-medium">午后咖啡馆 · 学习</h4>
+                                <div class="text-ash-500 text-xs">2024-05-15</div>
+                            </div>
+                            <p class="text-ash-500 text-xs mt-1">3D空间 | 降噪 | 4K高清</p>
+                            <div class="flex gap-2 mt-3">
+                                <button class="text-xs bg-ash-700 text-ash-400 px-3 py-1 rounded-lg ash-btn-gradient">播放</button>
+                                <button class="text-xs bg-ash-800 px-3 py-1 rounded-lg hover:bg-ash-700 transition-colors">编辑</button>
+                                <button class="text-xs bg-ash-800 px-3 py-1 rounded-lg hover:bg-ash-700 transition-colors">分享</button>
+                                <button class="text-xs text-ash-500 px-3 py-1 rounded-lg hover:text-ash-400 transition-colors">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 作品项3 -->
+                <div class="bg-ash-800 rounded-xl p-4 card-3d">
+                    <div class="flex gap-4">
+                        <div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 relative">
+                            <img src="https://images.unsplash.com/photo-1501630834273-4b5604d2ee31?q=80&w=400&auto=format&fit=crop" 
+                                 alt="深夜海岸" class="w-full h-full object-cover brightness-75">
+                            <div class="absolute top-1 right-1 bg-ash-900/80 text-xs px-2 py-1 rounded">8小时</div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between">
+                                <h4 class="font-medium">深夜海岸 · 助眠</h4>
+                                <div class="text-ash-500 text-xs">2024-05-10</div>
+                            </div>
+                            <p class="text-ash-500 text-xs mt-1">3D环绕 | 循环过渡 | 投影适配</p>
+                            <div class="flex gap-2 mt-3">
+                                <button class="text-xs bg-ash-700 text-ash-400 px-3 py-1 rounded-lg ash-btn-gradient">播放</button>
+                                <button class="text-xs bg-ash-800 px-3 py-1 rounded-lg hover:bg-ash-700 transition-colors">编辑</button>
+                                <button class="text-xs bg-ash-800 px-3 py-1 rounded-lg hover:bg-ash-700 transition-colors">分享</button>
+                                <button class="text-xs text-ash-500 px-3 py-1 rounded-lg hover:text-ash-400 transition-colors">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 草稿作品 -->
+                <div class="bg-ash-800/70 rounded-xl p-4 card-3d">
+                    <div class="flex gap-4">
+                        <div class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 relative bg-ash-700 flex items-center justify-center">
+                            <div class="text-ash-500 text-xl">🎙️</div>
+                            <div class="absolute top-1 right-1 bg-ash-900/80 text-xs px-2 py-1 rounded">草稿</div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between">
+                                <h4 class="font-medium text-ash-400">雨天书房 · 专注</h4>
+                                <div class="text-ash-500 text-xs">2024-05-20</div>
+                            </div>
+                            <p class="text-ash-500 text-xs mt-1">未完成 | 仅音频素材</p>
+                            <div class="flex gap-2 mt-3">
+                                <button class="text-xs bg-ash-700 text-ash-400 px-3 py-1 rounded-lg ash-btn-gradient">继续创作</button>
+                                <button class="text-xs text-ash-500 px-3 py-1 rounded-lg hover:text-ash-400 transition-colors">删除</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. 沉浸式播放页 -->
+        <div class="w-[480px] h-[850px] bg-ash-900 rounded-3xl p-8 overflow-hidden no-scrollbar relative card-3d shrink-0">
+            <!-- 顶部操作栏 -->
+            <header class="flex justify-between items-center mb-4">
+                <button class="text-ash-500 hover:text-white transition-colors text-sm">← 返回</button>
+                <div class="flex gap-3">
+                    <button class="text-ash-500 hover:text-white transition-colors text-sm">收藏</button>
+                    <button class="text-ash-500 hover:text-white transition-colors text-sm">更多</button>
+                </div>
+            </header>
+
+            <!-- 沉浸式播放区域 -->
+            <div class="relative aspect-film rounded-2xl overflow-hidden mb-6">
+                <img src="https://images.unsplash.com/photo-1516281710471-191b24611793?q=80&w=800&auto=format&fit=crop" 
+                     alt="森林雨声播放" class="w-full h-full object-cover brightness-80">
+                <!-- 播放控制遮罩 -->
+                <div class="absolute inset-0 flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity">
+                    <button class="w-20 h-20 rounded-full bg-ash-900/80 flex items-center justify-center text-white card-3d ash-btn-gradient">
+                        ⏸️
+                    </button>
+                </div>
+                <!-- 底部渐变控制栏 -->
+                <div class="absolute bottom-0 left-0 right-0 p-4 control-gradient">
+                    <!-- 播放进度 -->
+                    <div class="w-full h-1 bg-ash-700 rounded-full overflow-hidden mb-3">
+                        <div class="h-full progress-gradient w-[45%] rounded-full"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-ash-400">
+                        <span>4:32:15</span>
+                        <span>10:00:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 作品信息 -->
+            <div class="mb-6">
+                <h2 class="text-xl font-bold mb-1">森林雨声 · 深度助眠</h2>
+                <p class="text-ash-500 text-sm mb-3">由你的林间雨声素材生成 | 10小时无缝循环</p>
+                <div class="flex gap-4 mb-3">
+                    <button class="bg-ash-700 text-ash-400 px-4 py-2 rounded-lg text-sm ash-btn-gradient flex items-center gap-2">
+                        🎧 3D空间音效
+                    </button>
+                    <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2">
+                        ⏱️ 定时设置
+                    </button>
+                </div>
+            </div>
+
+            <!-- 播放控制区 -->
+            <div class="bg-ash-800 rounded-xl p-5 mb-6 card-3d">
+                <h3 class="font-medium mb-4 flex items-center gap-2">
+                    <span>播放设置</span>
+                    <span class="w-1 h-5 bg-ash-600 rounded-full"></span>
+                </h3>
+                
+                <!-- 音量控制 -->
+                <div class="mb-5">
+                    <label class="text-sm block mb-2 text-ash-500">音量</label>
+                    <div class="flex items-center gap-3">
+                        <span class="text-ash-400">🔊</span>
+                        <input type="range" min="0" max="100" value="80" class="w-full accent-ash-400">
+                        <span class="text-xs text-ash-500">80%</span>
+                    </div>
+                </div>
+
+                <!-- 音效设置 -->
+                <div class="mb-5">
+                    <label class="text-sm block mb-2 text-ash-500">音效模式</label>
+                    <div class="flex flex-wrap gap-3">
+                        <button class="bg-ash-700 text-ash-400 px-4 py-2 rounded-lg text-xs ash-btn-gradient">3D环绕</button>
+                        <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg text-xs transition-colors">立体声</button>
+                        <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg text-xs transition-colors">单声道</button>
+                        <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg text-xs transition-colors">降噪</button>
+                    </div>
+                </div>
+
+                <!-- 定时设置 -->
+                <div>
+                    <label class="text-sm block mb-2 text-ash-500">自动停止</label>
+                    <div class="flex flex-wrap gap-3">
+                        <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg text-xs transition-colors">1小时</button>
+                        <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg text-xs transition-colors">2小时</button>
+                        <button class="bg-ash-700 text-ash-400 px-4 py-2 rounded-lg text-xs ash-btn-gradient">4小时</button>
+                        <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg text-xs transition-colors">8小时</button>
+                        <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg text-xs transition-colors">自定义</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 视觉适配设置 -->
+            <div class="bg-ash-800 rounded-xl p-5 card-3d">
+                <h3 class="font-medium mb-4 flex items-center gap-2">
+                    <span>视觉适配</span>
+                    <span class="w-1 h-5 bg-ash-600 rounded-full"></span>
+                </h3>
+                <div class="flex flex-wrap gap-3">
+                    <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg text-xs transition-colors">16:9 标准</button>
+                    <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg text-xs transition-colors">21:9 宽屏</button>
+                    <button class="bg-ash-700 text-ash-400 px-4 py-2 rounded-lg text-xs ash-btn-gradient">4:3 投影适配</button>
+                    <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg text-xs transition-colors">全屏</button>
+                    <button class="bg-ash-800 hover:bg-ash-700 px-4 py-2 rounded-lg text-xs transition-colors">3D视觉增强</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
